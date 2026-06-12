@@ -1,3 +1,4 @@
+# Football Oracle — static site deploy to GitHub Pages.
 name: Deploy frontend to GitHub Pages
 
 on:
