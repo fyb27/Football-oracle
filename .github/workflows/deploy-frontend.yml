@@ -37,9 +37,9 @@ jobs:
 
       - name: Build
         env:
-          # Repo-name base for project Pages (https://<user>.github.io/football-oracle/).
-          # If your repo is named differently, set repo variable VITE_BASE to "/<repo>/".
-          VITE_BASE: ${{ vars.VITE_BASE || '/football-oracle/' }}
+          # Repo-name base for project Pages (https://<user>.github.io/Football-oracle/).
+          # Must match the repo name's case. Override with repo variable VITE_BASE.
+          VITE_BASE: ${{ vars.VITE_BASE || '/Football-oracle/' }}
         run: npm run build
 
       - name: Add SPA 404 fallback
