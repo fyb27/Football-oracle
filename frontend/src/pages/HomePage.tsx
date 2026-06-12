@@ -85,10 +85,7 @@ export default function HomePage() {
       >
         {loadError ? (
           <div className="rounded-xl border border-oracle-loss/40 bg-oracle-loss/10 p-4 text-center text-sm text-oracle-loss">
-            Couldn’t reach the prediction API: {loadError}
-            <div className="mt-1 text-xs text-slate-400">
-              Is the backend running? Start it with <code>npm run dev</code> in <code>/backend</code>.
-            </div>
+            Couldn’t load the team dataset: {loadError}
           </div>
         ) : (
           <>

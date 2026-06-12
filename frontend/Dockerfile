@@ -4,11 +4,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-# Build for root path inside the container (served at / by nginx).
-# Override VITE_API_URL at build time to point at your backend.
-ARG VITE_API_URL=""
-ENV VITE_BASE="/"
-ENV VITE_API_URL=$VITE_API_URL
+# Served at / by nginx; default base is root. Override with --build-arg VITE_BASE=...
+ARG VITE_BASE="/"
+ENV VITE_BASE=$VITE_BASE
 RUN npm run build
 
 # ---- runtime stage ----

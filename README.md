@@ -4,6 +4,8 @@
 
 A premium, dark-mode football match prediction app for you and your friends. Pick two teams, hit **Analyze Match**, and get the six things that actually matter — **Win % · Draw % · Loss % · Confidence · Risk · Top-5 likely scores** — backed by a real Elo + weighted-factor + Poisson model, plus form, head-to-head, AI insights and an auto-generated match summary.
 
+**It runs entirely in your browser.** The historical dataset is bundled and the whole prediction engine executes client-side — so there's **no backend to host**. Deploy the static site to GitHub Pages and it just works, for free.
+
 ![Football Oracle prediction view](docs/preview.png)
 
 ---
@@ -20,7 +22,9 @@ A premium, dark-mode football match prediction app for you and your friends. Pic
 - **Recent form** — last-10 W/D/L for both sides.
 - **Head-to-head** — meetings, wins/draws, goals and recent results.
 - **Best Predictions Today** — top-20 daily fixtures ranked by confidence.
-- **Extras** — searchable team dropdowns, favorite teams, prediction history, export-as-image, shareable links — all persisted locally so the static frontend works on GitHub Pages.
+- **Extras** — searchable team dropdowns, favorite teams, prediction history, export-as-image, shareable links — all persisted locally in your browser.
+
+> Predictions are based on **historical data** (a bundled, reproducible dataset). No live feeds, no logins, no servers.
 
 ---
 
@@ -28,10 +32,12 @@ A premium, dark-mode football match prediction app for you and your friends. Pic
 
 | Layer    | Tech                                                        |
 | -------- | ----------------------------------------------------------- |
-| Frontend | React 18 · Vite · TypeScript · Tailwind CSS · Framer Motion |
-| Backend  | Node.js · Express · TypeScript                              |
-| Database | SQLite (`better-sqlite3`) — Postgres-portable schema        |
-| Deploy   | Frontend → GitHub Pages · Backend → any Node host · Docker  |
+| App      | React 18 · Vite · TypeScript · Tailwind CSS · Framer Motion |
+| Engine   | Pure TypeScript — Elo + weighted model + Poisson, runs in-browser |
+| Data     | Bundled JSON dataset (generated from a seeded SQLite toolkit) |
+| Deploy   | GitHub Pages (static) · GitHub Actions · Docker (optional)  |
+
+The `backend/` folder is an **optional dev toolkit** that generates the bundled dataset (seeded SQLite + an exporter). You never deploy it — it exists so the data is reproducible and so a real live-data API could be plugged in later.
 
 ---
 
@@ -39,41 +45,35 @@ A premium, dark-mode football match prediction app for you and your friends. Pic
 
 ```
 football-oracle/
-├── backend/
+├── frontend/                      # ★ the entire app
 │   ├── src/
-│   │   ├── index.ts              # Express app + bootstrap (auto-seed)
-│   │   ├── config.ts             # env-driven config
 │   │   ├── data/
-│   │   │   ├── types.ts          # domain types + MatchDataProvider contract
-│   │   │   └── provider.ts       # LocalDbProvider (swap for a real API here)
-│   │   ├── db/
-│   │   │   ├── schema.sql         # Postgres-portable schema
-│   │   │   ├── database.ts        # the only SQLite-aware file
-│   │   │   └── seed.ts            # deterministic seed data generator
-│   │   ├── repositories/          # SQL → domain mapping
-│   │   ├── engine/                # ★ the prediction engine
-│   │   │   ├── elo.ts             # Elo ratings + expected score
-│   │   │   ├── prediction.ts      # weighted factor model + goal rates
-│   │   │   ├── poisson.ts         # Poisson scoreline matrix
-│   │   │   ├── confidence.ts      # confidence scoring
-│   │   │   ├── risk.ts            # risk scoring
-│   │   │   ├── insights.ts        # rule-based AI insight chips
-│   │   │   ├── summary.ts         # natural-language summary
-│   │   │   └── index.ts           # analyzeMatch() orchestrator
-│   │   ├── routes/                # /teams /predict /best-today
-│   │   └── fixtures.ts            # deterministic daily slate
-│   └── Dockerfile
-├── frontend/
-│   ├── src/
-│   │   ├── api/client.ts          # typed API client
-│   │   ├── components/            # ResultView + all widgets
-│   │   ├── pages/                 # Home, Best Today, History, Favorites
-│   │   ├── lib/                   # format helpers + localStorage store
-│   │   └── types.ts               # response types (mirror of engine)
-│   ├── Dockerfile + nginx.conf
+│   │   │   ├── dataset.json        # bundled historical data (24 teams)
+│   │   │   └── staticProvider.ts   # reads the dataset in-browser
+│   │   ├── engine/                 # ★ the prediction engine (pure TS)
+│   │   │   ├── elo.ts              # Elo ratings + expected score
+│   │   │   ├── prediction.ts       # weighted factor model + goal rates
+│   │   │   ├── poisson.ts          # Poisson scoreline matrix
+│   │   │   ├── confidence.ts       # confidence scoring
+│   │   │   ├── risk.ts             # risk scoring
+│   │   │   ├── insights.ts         # rule-based AI insight chips
+│   │   │   ├── summary.ts          # natural-language summary
+│   │   │   ├── analyze.ts          # analyzeMatch() orchestrator
+│   │   │   └── fixtures.ts         # deterministic daily slate
+│   │   ├── api/client.ts           # runs the engine locally (swap-in seam for a real API)
+│   │   ├── components/             # ResultView + all widgets
+│   │   ├── pages/                  # Home, Best Today, History, Favorites
+│   │   ├── lib/                    # format helpers + localStorage store
+│   │   └── types.ts                # shared types
+│   ├── Dockerfile + nginx.conf     # optional containerised static serve
 │   └── vite.config.ts
+├── backend/                       # OPTIONAL dataset toolkit (not deployed)
+│   └── src/
+│       ├── db/seed.ts              # deterministic seed generator
+│       ├── engine/                 # original Node engine (mirrors frontend/engine)
+│       └── scripts/export-dataset.ts  # writes frontend/src/data/dataset.json
 ├── .github/workflows/deploy-frontend.yml
-├── docker-compose.yml
+├── docker-compose.yml             # optional
 ├── INSTALL.md
 └── README.md
 ```
@@ -82,7 +82,7 @@ football-oracle/
 
 ## 🧮 The prediction engine
 
-The headline numbers come from **two independent models** that are then blended:
+The headline numbers come from **two independent models** that are then blended.
 
 **1. Weighted strength model** — each factor produces a signal in `-1..1` (positive favours the home team); the weighted sum is the "home edge", mapped to win/draw/loss.
 
@@ -96,7 +96,7 @@ The headline numbers come from **two independent models** that are then blended:
 | Head-to-head    | 5%     |
 | Home advantage  | 5%     |
 
-- **Elo** uses the standard logistic expected score with a home-field bonus (`backend/src/engine/elo.ts`).
+- **Elo** uses the standard logistic expected score with a home-field bonus (`frontend/src/engine/elo.ts`).
 - The home edge maps to outcomes via a draw rate that shrinks as the mismatch grows.
 
 **2. Poisson scoreline model** — attack/defence profiles (blending goals + xG) become goal rates λ<sub>home</sub>, λ<sub>away</sub>, nudged by the strength edge. An independent bivariate Poisson grid (0-0…6-6, renormalised) yields every scoreline probability → sorted for the top-5 and the heatmap, and summed into its own win/draw/loss.
@@ -108,76 +108,64 @@ The headline numbers come from **two independent models** that are then blended:
 - **Risk** is the inverse of those predictability signals (strength gap, model agreement, H2H decisiveness, form consistency).
 - **Insights** and **summary** are interpretable functions of these same quantities — so the words never contradict the numbers.
 
-> Seed data is generated from a **fixed RNG seed**, so the same matchup always returns the same prediction. Swap in real data without touching the engine (see below).
+> The dataset is generated from a **fixed RNG seed**, so the same matchup always returns the same prediction.
 
 ---
 
 ## 🚀 Quick start
 
 ```bash
-# 1. Backend  (terminal 1)
-cd backend
-npm install
-npm run dev          # → http://localhost:4000  (auto-seeds on first run)
-
-# 2. Frontend (terminal 2)
 cd frontend
 npm install
 npm run dev          # → http://localhost:5173/football-oracle/
 ```
 
-The dev server proxies `/api` to the backend, so no extra config is needed. Full step-by-step (incl. Windows/PowerShell) is in **[INSTALL.md](INSTALL.md)**.
+That's the whole app — no second process. Full details (incl. Windows/PowerShell) in **[INSTALL.md](INSTALL.md)**.
 
-### With Docker
+### Production preview
 
 ```bash
-docker compose up --build
-# web → http://localhost:8080   api → http://localhost:4000
+cd frontend
+npm run build
+npm run preview      # serves the built static site
+```
+
+### Docker (optional)
+
+```bash
+docker compose up --build   # static site on http://localhost:8080
 ```
 
 ---
 
-## 🌐 Deployment
+## 🌐 Deployment — GitHub Pages
 
-**Frontend → GitHub Pages** (automated via `.github/workflows/deploy-frontend.yml`):
+Automated via `.github/workflows/deploy-frontend.yml`:
 
 1. Push to `main`. In **Settings → Pages**, set source to **GitHub Actions**.
-2. Add a repo **variable** `VITE_API_URL` pointing at your deployed backend (e.g. `https://football-oracle-api.onrender.com`).
-3. (If your repo isn't named `football-oracle`, also set variable `VITE_BASE` to `"/<your-repo>/"`.)
+2. Done — your site builds and deploys to `https://<user>.github.io/football-oracle/`.
+3. If your repo isn't named `football-oracle`, set repo **variable** `VITE_BASE` to `"/<your-repo>/"`.
 
-**Backend → any Node host** (Render, Railway, Fly.io, a VPS, or the included Docker image):
-
-- Set `CORS_ORIGIN` to your Pages URL, mount a volume for `DB_PATH`, and run `npm run build && npm start`.
+No secrets, no API URL, no backend.
 
 ---
 
-## 🔌 Plugging in real data
+## 🔄 Regenerating the dataset (optional)
 
-Everything reads through the `MatchDataProvider` interface (`backend/src/data/types.ts`). To use a real football API:
+The bundled `frontend/src/data/dataset.json` is committed, so you don't need this. To regenerate it (e.g. after tweaking the seed):
 
-1. Implement the interface in a new class (fetch + map upstream payloads into the domain types).
-2. Return it from `getProvider()` in `backend/src/data/provider.ts`.
+```bash
+cd backend
+npm install
+npm run export:data   # rewrites frontend/src/data/dataset.json
+```
 
-The engine, routes and frontend stay exactly the same.
+### Future: real live data
 
-### Postgres migration
-
-The schema (`backend/src/db/schema.sql`) avoids SQLite-only constructs. To migrate: point a Postgres driver at it (swap `AUTOINCREMENT` → `GENERATED … AS IDENTITY`), update `db/database.ts`, and the repositories' SQL carries over unchanged.
-
----
-
-## 📡 API reference
-
-| Method | Path                                | Description                              |
-| ------ | ----------------------------------- | ---------------------------------------- |
-| `GET`  | `/api/health`                       | Liveness check                           |
-| `GET`  | `/api/teams`                        | All teams (for dropdowns)                |
-| `GET`  | `/api/teams/:id`                    | Team profile + recent form               |
-| `GET`  | `/api/predict?home=<id>&away=<id>`  | Full match analysis (`&save=true` to store) |
-| `GET`  | `/api/best-today`                   | Top-20 daily fixtures by confidence      |
+Everything reads through one seam — `frontend/src/api/client.ts`. To use a real football API later, change those methods from "run the engine on the bundled data" to `fetch(...)` against your endpoint (you'd add a tiny backend or serverless proxy if the API needs a secret key). The UI doesn't change.
 
 ---
 
 ## ⚠️ Disclaimer
 
-Predictions are statistical estimates from a model on seeded data — not guarantees. For entertainment among friends. Bet responsibly.
+Predictions are statistical estimates from a model on historical seed data — not guarantees. For entertainment among friends. Bet responsibly.

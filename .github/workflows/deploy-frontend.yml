@@ -38,11 +38,8 @@ jobs:
       - name: Build
         env:
           # Repo-name base for project Pages (https://<user>.github.io/football-oracle/).
-          # If your repo is named differently, set VITE_BASE to "/<repo>/".
+          # If your repo is named differently, set repo variable VITE_BASE to "/<repo>/".
           VITE_BASE: ${{ vars.VITE_BASE || '/football-oracle/' }}
-          # URL of your deployed backend API. Set as a repo variable:
-          # Settings → Secrets and variables → Actions → Variables → VITE_API_URL
-          VITE_API_URL: ${{ vars.VITE_API_URL }}
         run: npm run build
 
       - name: Add SPA 404 fallback
