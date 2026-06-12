@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Builds
+dist/
+backend/dist/
+frontend/dist/
+
+# Data / runtime
+backend/data/
+*.db
+*.db-shm
+*.db-wal
+
+# Env
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Tooling / OS
+.DS_Store
+.playwright-mcp/
+.vscode/

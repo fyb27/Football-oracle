@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-ink-950 text-slate-200 antialiased;
+  background-image:
+    radial-gradient(900px 600px at 12% -8%, rgba(108, 140, 255, 0.16), transparent 60%),
+    radial-gradient(800px 600px at 100% 0%, rgba(160, 123, 255, 0.12), transparent 55%),
+    radial-gradient(700px 700px at 50% 120%, rgba(34, 211, 167, 0.08), transparent 60%);
+  background-attachment: fixed;
+}
+
+@layer components {
+  /* Frosted glass surface — the core visual motif. */
+  .glass {
+    @apply rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-glass;
+  }
+  .glass-strong {
+    @apply rounded-2xl border border-white/10 bg-ink-850/70 backdrop-blur-xl shadow-glass;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-oracle-accent to-oracle-accent2 px-5 py-3 font-semibold text-white shadow-glow transition-[transform,filter] hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10;
+  }
+  .section-title {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-slate-400;
+  }
+}
+
+/* Slim dark scrollbars */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
