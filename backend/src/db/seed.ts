@@ -132,6 +132,44 @@ function statsFor(elo: number): SeedStats {
   };
 }
 
+/**
+ * Derives goal/win/clean-sheet stats from a team's REAL recent results, made
+ * robust two ways:
+ *  - blowout capping: goals per match capped at 4 so an 11-1 vs a minnow can't
+ *    masquerade as elite attacking output (we can't opponent-adjust — the form
+ *    opponents aren't all in the dataset).
+ *  - Bayesian shrinkage toward the Elo-implied prior (k pseudo-matches), so a
+ *    short, noisy sample is pulled toward the team's true strength.
+ * xG is proxied by (capped, shrunk) goals — national-team xG isn't published
+ * consistently. Possession/shots/passing stay Elo-modelled (no real source).
+ */
+function statsFromForm(real: RealMatch[], prior: SeedStats): SeedStats {
+  const n = real.length;
+  const k = 5; // prior weight in pseudo-matches
+  const cap = (x: number) => Math.min(x, 4);
+  const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+  const blend = (r: number, p: number) => +(((n * r + k * p) / (n + k)).toFixed(2));
+
+  const realScored = mean(real.map((m) => cap(m.gf)));
+  const realConceded = mean(real.map((m) => cap(m.ga)));
+  const wins = real.filter((m) => m.gf > m.ga).length;
+  const cleanSheets = real.filter((m) => m.ga === 0).length;
+
+  const avgGoalsScored = blend(realScored, prior.avgGoalsScored);
+  const avgGoalsConceded = Math.max(0.4, blend(realConceded, prior.avgGoalsConceded));
+  return {
+    winRate: blend(wins / n, prior.winRate),
+    avgGoalsScored,
+    avgGoalsConceded,
+    xgFor: avgGoalsScored,
+    xgAgainst: avgGoalsConceded,
+    cleanSheetRate: blend(cleanSheets / n, prior.cleanSheetRate),
+    possession: prior.possession,
+    shotsPerMatch: prior.shotsPerMatch,
+    passAccuracy: prior.passAccuracy,
+  };
+}
+
 // ---- Real recent form (most-recent first) ---------------------------------
 // Sourced from ESPN/Wikipedia results pages (2025–June 2026). venue: H/A/N.
 interface RealMatch {
@@ -746,7 +784,10 @@ export function seed(force = false) {
     );
 
     const teams = ROSTER.map((t) => {
-      const stats = statsFor(t.elo);
+      const prior = statsFor(t.elo);
+      const real = REAL_FORM[t.name];
+      // Use real-form-derived stats when we have a usable sample; else the prior.
+      const stats = real && real.length >= 4 ? statsFromForm(real, prior) : prior;
       const info = insertTeam.run({ name: t.name, code: t.code, group: t.group, elo: t.elo, ...stats });
       return { id: Number(info.lastInsertRowid), ...t, stats };
     });
