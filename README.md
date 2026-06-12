@@ -12,6 +12,7 @@ A premium, dark-mode football match prediction app for you and your friends. Pic
 
 ## ✨ Features
 
+- **World Cup 2026 simulator** — Monte Carlo simulates the entire tournament 10,000× from the real group draw: **title odds** (champion / final / semi / advance %), projected group standings, and a projected knockout bracket.
 - **Match prediction** — three-way win/draw/loss probabilities from a weighted strength model.
 - **Confidence score** — 0–100 + ⭐ rating + label (Low → Very High).
 - **Risk meter** — 🟢/🟡/🔴 from strength gap, model agreement, historical predictability and form consistency.
@@ -24,7 +25,7 @@ A premium, dark-mode football match prediction app for you and your friends. Pic
 - **Best Predictions Today** — top-20 daily fixtures ranked by confidence.
 - **Extras** — searchable team dropdowns, favorite teams, prediction history, export-as-image, shareable links — all persisted locally in your browser.
 
-> Predictions are based on **historical data** (a bundled, reproducible dataset). No live feeds, no logins, no servers.
+> Built on **real 2026 World Cup data**: the actual 48 qualified teams, the official group draw, current eloratings.net (June 2026) ratings, and each team's real recent form. Some granular stats are modelled from rating; head-to-head is synthetic. No live feeds, no logins, no servers.
 
 ---
 

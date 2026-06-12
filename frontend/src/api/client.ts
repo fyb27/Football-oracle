@@ -1,7 +1,8 @@
 import type { TeamListItem, MatchAnalysis, BestMatchRow } from "../types";
-import { StaticProvider } from "../data/staticProvider";
+import { StaticProvider, GROUPS } from "../data/staticProvider";
 import { analyzeMatch } from "../engine/analyze";
 import { generateDailyFixtures } from "../engine/fixtures";
+import { simulateTournament, type SimResult } from "../engine/simulate";
 
 /**
  * The "API" now runs entirely in the browser against the bundled dataset —
@@ -13,6 +14,8 @@ const provider = new StaticProvider();
 
 // Cache the daily slate so navigating back to "Best Today" is instant.
 let bestCache: { date: string; matches: BestMatchRow[] } | null = null;
+// Cache the (expensive) tournament simulation.
+let simCache: SimResult | null = null;
 
 export const api = {
   async listTeams(): Promise<TeamListItem[]> {
@@ -69,5 +72,19 @@ export const api = {
 
     bestCache = { date, matches };
     return bestCache;
+  },
+
+  /** The official 2026 World Cup group draw. */
+  groups(): Record<string, string[]> {
+    return GROUPS;
+  },
+
+  /** Monte Carlo tournament simulation (cached after first run). */
+  async simulate(nSims = 10000): Promise<SimResult> {
+    if (simCache) return simCache;
+    // Yield once so the UI can paint a loading state before the heavy loop.
+    await new Promise((r) => setTimeout(r, 20));
+    simCache = simulateTournament(provider, GROUPS, nSims);
+    return simCache;
   },
 };

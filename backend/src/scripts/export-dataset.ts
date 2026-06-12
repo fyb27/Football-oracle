@@ -9,7 +9,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { config } from "../config.js";
 import { getDb } from "../db/database.js";
-import { seed } from "../db/seed.js";
+import { seed, GROUPS } from "../db/seed.js";
 import { teamRepository } from "../repositories/teamRepository.js";
 import { matchRepository } from "../repositories/matchRepository.js";
 
@@ -48,6 +48,7 @@ const meetings = getDb()
 
 const dataset = {
   generatedFrom: "seed:20260612",
+  groups: GROUPS,
   teams,
   form,
   meetings: meetings.map((m) => ({

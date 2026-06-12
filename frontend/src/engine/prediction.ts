@@ -48,7 +48,11 @@ export function predict(
   homeForm: RecentMatch[],
   awayForm: RecentMatch[],
   h2h: HeadToHead,
+  opts: { neutral?: boolean } = {},
 ): WeightedPrediction {
+  // On a neutral venue (e.g. a World Cup match) the home edge is removed.
+  const homeBoost = opts.neutral ? 1.0 : 1.1;
+  const awayBoost = opts.neutral ? 1.0 : 0.95;
   const eloExp = expectedScore(home.elo, away.elo);
   const eloSignal = 2 * eloExp - 1;
 
@@ -73,7 +77,7 @@ export function predict(
   const h2hSignal =
     h2h.meetings > 0 ? clamp((h2h.homeWins - h2h.awayWins) / h2h.meetings, -1, 1) : 0;
 
-  const homeAdvSignal = 0.4;
+  const homeAdvSignal = opts.neutral ? 0 : 0.4;
 
   const factors: FactorContribution[] = [
     fc("elo", "Elo Rating", WEIGHTS.elo, eloSignal),
@@ -105,8 +109,8 @@ export function predict(
   const homeDef = (home.stats.avgGoalsConceded + home.stats.xgAgainst) / 2 / LEAGUE_AVG_GOALS;
   const awayDef = (away.stats.avgGoalsConceded + away.stats.xgAgainst) / 2 / LEAGUE_AVG_GOALS;
 
-  let lambdaHome = LEAGUE_AVG_GOALS * homeAttack * awayDef * 1.1;
-  let lambdaAway = LEAGUE_AVG_GOALS * awayAttack * homeDef * 0.95;
+  let lambdaHome = LEAGUE_AVG_GOALS * homeAttack * awayDef * homeBoost;
+  let lambdaAway = LEAGUE_AVG_GOALS * awayAttack * homeDef * awayBoost;
 
   lambdaHome *= 1 + 0.15 * signal;
   lambdaAway *= 1 - 0.15 * signal;

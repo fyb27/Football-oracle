@@ -11,6 +11,7 @@ interface Meeting {
   playedAt: string;
 }
 interface Dataset {
+  groups: Record<string, string[]>;
   teams: Team[];
   form: Record<string, RecentMatch[]>;
   meetings: Meeting[];
@@ -18,6 +19,9 @@ interface Dataset {
 
 const dataset = datasetJson as unknown as Dataset;
 const teamsById = new Map<number, Team>(dataset.teams.map((t) => [t.id, t]));
+
+/** The official 2026 World Cup group draw (A–L → team names). */
+export const GROUPS: Record<string, string[]> = dataset.groups;
 
 /**
  * Reads the bundled seed dataset entirely in the browser — no network, no
