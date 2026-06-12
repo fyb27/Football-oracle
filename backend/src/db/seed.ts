@@ -35,6 +35,9 @@ interface BaseTeam {
   group: string;
   elo: number;
 }
+// A 48-team World Cup field across all confederations. The three hosts
+// (USA, Canada, Mexico) are always included. Elo ratings are approximate and
+// only seed the model; the underlying data is synthetic/historical.
 const ROSTER: BaseTeam[] = [
   { name: "Argentina", code: "ARG", group: "South America", elo: 2095 },
   { name: "France", code: "FRA", group: "Europe", elo: 2050 },
@@ -56,10 +59,34 @@ const ROSTER: BaseTeam[] = [
   { name: "Mexico", code: "MEX", group: "North America", elo: 1805 },
   { name: "Senegal", code: "SEN", group: "Africa", elo: 1800 },
   { name: "USA", code: "USA", group: "North America", elo: 1790 },
+  { name: "Ecuador", code: "ECU", group: "South America", elo: 1785 },
+  { name: "Austria", code: "AUT", group: "Europe", elo: 1780 },
+  { name: "Ukraine", code: "UKR", group: "Europe", elo: 1770 },
   { name: "South Korea", code: "KOR", group: "Asia", elo: 1762 },
+  { name: "Türkiye", code: "TUR", group: "Europe", elo: 1758 },
+  { name: "Sweden", code: "SWE", group: "Europe", elo: 1752 },
+  { name: "Serbia", code: "SRB", group: "Europe", elo: 1748 },
+  { name: "Poland", code: "POL", group: "Europe", elo: 1744 },
   { name: "Nigeria", code: "NGA", group: "Africa", elo: 1742 },
+  { name: "Wales", code: "WAL", group: "Europe", elo: 1738 },
   { name: "Australia", code: "AUS", group: "Asia", elo: 1730 },
+  { name: "Egypt", code: "EGY", group: "Africa", elo: 1728 },
+  { name: "Canada", code: "CAN", group: "North America", elo: 1726 },
   { name: "Czechia", code: "CZE", group: "Europe", elo: 1720 },
+  { name: "Norway", code: "NOR", group: "Europe", elo: 1716 },
+  { name: "Hungary", code: "HUN", group: "Europe", elo: 1712 },
+  { name: "Peru", code: "PER", group: "South America", elo: 1708 },
+  { name: "Scotland", code: "SCO", group: "Europe", elo: 1704 },
+  { name: "Algeria", code: "ALG", group: "Africa", elo: 1700 },
+  { name: "Ivory Coast", code: "CIV", group: "Africa", elo: 1694 },
+  { name: "Cameroon", code: "CMR", group: "Africa", elo: 1686 },
+  { name: "Iran", code: "IRN", group: "Asia", elo: 1680 },
+  { name: "Greece", code: "GRE", group: "Europe", elo: 1674 },
+  { name: "Ghana", code: "GHA", group: "Africa", elo: 1668 },
+  { name: "Paraguay", code: "PAR", group: "South America", elo: 1660 },
+  { name: "Tunisia", code: "TUN", group: "Africa", elo: 1654 },
+  { name: "Saudi Arabia", code: "KSA", group: "Asia", elo: 1648 },
+  { name: "Costa Rica", code: "CRC", group: "North America", elo: 1640 },
 ];
 
 /** Maps Elo to a 0..1 strength used to derive plausible aggregate stats. */
